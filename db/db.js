@@ -1,64 +1,45 @@
 const util = require('util');
 const fs = require('fs');
-const uuid = require('uuid'); 
-const { parse } = require('path-posix');  
-
+let uuid = require('uuid').v4; 
 const readFileAsync = util.promisify(fs.readFile)
 const writeFileAsync = util.promisify(fs.writeFile)
 
 
-class NoteDb {
-
-    readNote(){
-        return readFileAsync('db/db.json', 'utf-8');
+class Notes {
+    readNote() {
+        return readFileAsync("db/db.json", "utf8")
+    }
+    writeNote(note) {
+        return writeFileAsync("db/db.json", JSON.stringify(note))
     }
 
-    writeNote(data){
-        return writeFileAsync('db/db.json', JSON.stringify(data));
-    }
+    addNote(note) {
+        const { title, text } = note
 
-
-
-    getNotes(){
-        return this.readNote().then((note) =>{
-
-            let parsedNoted;
-
-            try{
-                parsedNoted = [].concat(JSON.parse(note))
-
-            } catch (err){
-                parsedNoted =[]
-            }
-
-            return parsedNoted
-        })
-    }
- 
-
-    postNote(newNote){
-        const {title, text} = newNote
-
-        if(!title || !text){
-            throw new Error('message')
+        if (!title || !text) {
+            throw new Error("title and text cannot be blank")
         }
 
-        const addNote = { title, text, id:uuid()}
-
+        const newNote = { title, text, id: uuid() }
 
         return this.getNotes()
-        .then((note) => [...note, addNote ])
-        .then((updateNote) => this.writeNote(updateNote))
-        .then(() => addNote)
+            .then(notes => [...notes, newNote])
+            .then(updatedNotes => this.write(updatedNotes))
+            .then(() => this.newNote)
     }
 
-
-    deleteNote(id){
-
+    getNotes() {
+        return this.readNote()
+            .then(notes => {
+                return JSON.parse(notes) || [];
+            })
+    }
+    removeNote(id) {
         return this.getNotes()
-        .then((note) => note.filter((noteId) => noteId.id !== id))
-        .then((filteredNote) => this.writeNote(filteredNote))
+            .then(notes => notes.filter(note => note.id !== id))
+            .then(keptNotes => this.writeNote(keptNotes))
     }
 }
 
-module.exports = new NoteDb();
+
+module.exports = new Notes();
