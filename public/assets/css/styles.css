@@ -76,3 +76,9 @@ body {
   padding: 20px;
   cursor: pointer;
 }
+
+:hover.list-group-item{
+  background-color: rgb(238, 238, 238);
+  transition: ease-out 0.5s; 
+  color: #18bc9c;
+}
